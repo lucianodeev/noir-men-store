@@ -10,16 +10,7 @@ const products=[
 {id:9,name:'Maskulo Armored — Black',cat:'Brief',price:59.90,img:'https://maskulo.uk/cdn/shop/collections/mens-briefs-465285.png?v=1741557347',sizes:['S','M','L','XL'],pay:'https://buy.stripe.com/9B65kE2vyagm3oC4a4fw41V'},
 {id:10,name:'Armored Collection Look',cat:'Clubwear',price:69.90,img:'https://maskulo.uk/cdn/shop/collections/armored-collection-983253.png?v=1741557184',sizes:['S','M','L','XL'],pay:'https://buy.stripe.com/aFa5kEgmo1JQ0cq6icfw41W'}
 ];
-let cart=[];
 const euro=n=>new Intl.NumberFormat('pt-PT',{style:'currency',currency:'EUR'}).format(n);
-function render(){grid.innerHTML=products.map(p=>`<article class="card"><div class="pic"><img src="${p.img}" alt="${p.name}" loading="lazy"></div><div class="cardBody"><h3>${p.name}</h3><strong class="price">${euro(p.price)}</strong><div class="sizes">${p.sizes.map(s=>`<button type="button">${s}</button>`).join('')}</div><button class="add" onclick="add(${p.id})">ADICIONAR AO CARRINHO</button><button class="add" onclick="buy(${p.id})">COMPRAR AGORA · STRIPE</button></div></article>`).join('')}
-function buy(id){const p=products.find(p=>p.id===id);if(p&&p.pay)window.location.href=p.pay}
-function add(id){cart.push(products.find(p=>p.id===id));drawCart();openCart()}
-function drawCart(){count.textContent=cart.length;cart.innerHTML=cart.length?cart.map((p,i)=>`<div class="cartItem"><span>${p.name}</span><span>${euro(p.price)} <button onclick="removeItem(${i})">×</button></span></div>`).join(''):'Seu carrinho está vazio.';total.textContent=euro(cart.reduce((s,p)=>s+p.price,0))}
-function removeItem(i){cart.splice(i,1);drawCart()}
-function openCart(){drawer.classList.add('open');shade.classList.add('open')}
-function closeCart(){drawer.classList.remove('open');shade.classList.remove('open')}
-cartBtn.onclick=openCart;close.onclick=shade.onclick=closeCart;
-checkout.onclick=()=>{if(cart.length===1){buy(cart[0].id);return}alert(cart.length?'Para manter valores e tamanhos corretos, finalize cada produto pelo botão COMPRAR AGORA · STRIPE.':'Seu carrinho está vazio.')};
+function render(){grid.innerHTML=products.map(p=>`<article class="card"><div class="pic"><img src="${p.img}" alt="${p.name}" loading="lazy"></div><div class="cardBody"><h3>${p.name}</h3><strong class="price">${euro(p.price)}</strong><div class="sizes">${p.sizes.map(s=>`<span>${s}</span>`).join('')}</div><a class="add stripePay" href="${p.pay}">PAGAR COM STRIPE</a><small class="stripeHint">Escolha o tamanho e ajuste a quantidade no checkout seguro.</small></div></article>`).join('')}
 if(new URLSearchParams(location.search).get('payment')==='success')setTimeout(()=>alert('Pagamento concluído. Obrigado pela compra!'),200);
-render();drawCart();
+render();
