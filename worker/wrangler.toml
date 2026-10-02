@@ -1,0 +1,6 @@
+name = "ldr-sex-shop-checkout"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+
+[vars]
+STORE_ORIGIN = "https://noir-men-store.onrender.com"
