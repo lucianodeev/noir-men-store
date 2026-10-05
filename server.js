@@ -1,11 +1,82 @@
-const express=require('express');
-const Stripe=require('stripe');
-const path=require('path');
-const app=express();
-const stripe=Stripe(process.env.STRIPE_SECRET_KEY||'');
-const catalog={1:['Frank Cyclone - Black',2990],2:['Gary Cyclone - Army Green',3490],3:['Kyle Steelguard Mesh - Camo/White',2990],4:['Captain-A Brief - Royal Blue',3490],5:['Ken Gridd-Iron - Black/White',2990],6:['Dash Cyclone - Red',3990],7:['Cork Cyclone - Royal Blue',3490],8:['Eugene Cyclone - White',4990],9:['Maskulo Armored - Black',5990],10:['Armored Collection Look',6990],11:['MY.SIZE PRO - 3 Preservativos',590]};
-app.use(express.json());app.use(express.static(__dirname));
-app.post('/api/checkout',async(req,res)=>{try{if(!process.env.STRIPE_SECRET_KEY)throw Error('not configured');const items=Array.isArray(req.body.items)?req.body.items:[];if(!items.length||items.length>30)throw Error('invalid cart');const line_items=items.map(i=>{const p=catalog[Number(i.id)];if(!p)throw Error('invalid product');const q=Math.max(1,Math.min(20,Number(i.qty)||1));const opt=String(i.option||'').slice(0,30);return{quantity:q,price_data:{currency:'eur',unit_amount:p[1],product_data:{name:p[0]+(opt?' - '+opt:'')}}}}});const origin=req.protocol+'://'+req.get('host');const session=await stripe.checkout.sessions.create({mode:'payment',line_items,success_url:origin+'/?payment=success',cancel_url:origin+'/?payment=cancel',shipping_address_collection:{allowed_countries:['BE','PT','FR','DE','ES','IT','NL','LU']}});res.json({url:session.url})}catch(e){console.error(e.message);res.status(400).json({error:'Unable to create checkout'})}});
-app.get('/api/health',(req,res)=>res.json({ok:true,stripeConfigured:Boolean(process.env.STRIPE_SECRET_KEY)}));
-app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'index.html')));
-app.listen(process.env.PORT||10000);
+const express = require('express');
+const Stripe = require('stripe');
+const path = require('path');
+
+const app = express();
+const stripe = Stripe(process.env.STRIPE_SECRET_KEY || '');
+
+const catalog = {
+  1: ['Frank Cyclone - Black', 2990],
+  2: ['Gary Cyclone - Army Green', 3490],
+  3: ['Kyle Steelguard Mesh - Camo/White', 2990],
+  4: ['Captain-A Brief - Royal Blue', 3490],
+  5: ['Ken Gridd-Iron - Black/White', 2990],
+  6: ['Dash Cyclone - Red', 3990],
+  7: ['Cork Cyclone - Royal Blue', 3490],
+  8: ['Eugene Cyclone - White', 4990],
+  9: ['Maskulo Armored - Black', 5990],
+  10: ['Armored Collection Look', 6990],
+  11: ['MY.SIZE PRO - 3 Preservativos', 590]
+};
+
+app.use(express.json());
+app.use(express.static(__dirname));
+
+app.post('/api/checkout', async (req, res) => {
+  try {
+    if (!process.env.STRIPE_SECRET_KEY) throw new Error('Stripe not configured');
+
+    const items = Array.isArray(req.body.items) ? req.body.items : [];
+    if (!items.length || items.length > 30) throw new Error('Invalid cart');
+
+    const line_items = items.map((item) => {
+      const product = catalog[Number(item.id)];
+      if (!product) throw new Error('Invalid product');
+
+      const quantity = Math.max(1, Math.min(20, Number(item.qty) || 1));
+      const option = String(item.option || '').slice(0, 30);
+
+      return {
+        quantity,
+        price_data: {
+          currency: 'eur',
+          unit_amount: product[1],
+          product_data: {
+            name: product[0] + (option ? ' - ' + option : '')
+          }
+        }
+      };
+    });
+
+    const origin = req.protocol + '://' + req.get('host');
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      line_items,
+      success_url: origin + '/?payment=success',
+      cancel_url: origin + '/?payment=cancel',
+      shipping_address_collection: {
+        allowed_countries: ['BE', 'PT', 'FR', 'DE', 'ES', 'IT', 'NL', 'LU']
+      }
+    });
+
+    res.json({ url: session.url });
+  } catch (error) {
+    console.error(error.message);
+    res.status(400).json({ error: 'Unable to create checkout' });
+  }
+});
+
+app.get('/api/health', (req, res) => {
+  res.json({
+    ok: true,
+    stripeConfigured: Boolean(process.env.STRIPE_SECRET_KEY)
+  });
+});
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+app.listen(process.env.PORT || 10000, () => {
+  console.log('NOIR checkout server running');
+});
